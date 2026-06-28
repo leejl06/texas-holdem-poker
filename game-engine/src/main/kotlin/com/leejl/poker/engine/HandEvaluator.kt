@@ -31,7 +31,7 @@ object HandEvaluator {
         val groups = counts.entries.sortedByDescending { it.value * 100 + it.key }
 
         return when {
-            isFlush && isStraight && adjRanks[0] == 13 -> // A-K-Q-J-10 of same suit
+            isFlush && isStraight && adjRanks[0] == 14 -> // A-K-Q-J-10 of same suit
                 HandResult(HandRank.ROYAL_FLUSH, adjRanks)
             isFlush && isStraight ->
                 HandResult(HandRank.STRAIGHT_FLUSH, adjRanks)

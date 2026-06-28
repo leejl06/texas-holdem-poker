@@ -1,0 +1,19 @@
+# Auto-detect text files
+* text=auto
+
+# Kotlin/Java source
+*.kt text diff=kotlin
+*.kts text
+*.java text
+
+# Gradle
+*.gradle text
+*.gradle.kts text
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+
+# Binary files
+*.jar binary
+*.png binary
+*.jpg binary
+*.ico binary
