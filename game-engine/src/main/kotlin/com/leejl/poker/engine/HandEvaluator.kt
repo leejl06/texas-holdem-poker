@@ -54,10 +54,10 @@ object HandEvaluator {
         }
     }
 
-    /** From 7 cards (2 hole + 5 community), find the best 5-card hand. */
-    fun bestHand(sevenCards: List<Card>): HandResult {
-        require(sevenCards.size == 7) { "Expected 5-7 cards, got ${sevenCards.size}" }
-        return sevenCards.combinations(5).maxOf { evaluate(it) }
+    /** From 5-7 cards (2 hole + 5 community), find the best 5-card hand. */
+    fun bestHand(sevenOrFewer: List<Card>): HandResult {
+        require(sevenOrFewer.size in 5..7) { "Expected 5-7 cards, got ${sevenOrFewer.size}" }
+        return sevenOrFewer.combinations(5).maxOf { evaluate(it) }
     }
 
     /** Compare two hands (7 cards each) and return the winner index + result. */

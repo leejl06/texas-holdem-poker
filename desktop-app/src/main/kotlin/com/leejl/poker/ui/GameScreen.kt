@@ -13,10 +13,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.leejl.poker.engine.GameState
 import com.leejl.poker.model.GameViewModel
 import com.leejl.poker.model.PlayerAction
 
@@ -28,13 +26,23 @@ fun GameScreen(viewModel: GameViewModel) {
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF0D0D0D))) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Top bar
             TopBar(
                 handNumber = state.handHistory.size,
                 activeCount = viewModel.activePlayerCount,
                 onNewGame = { viewModel.newHand() },
                 modifier = Modifier.fillMaxWidth()
             )
+
+            // Error banner
+            viewModel.lastError?.let { err ->
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                        .background(Color(0xFFB71C1C).copy(alpha = 0.85f))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(err, color = Color.White, fontSize = 13.sp)
+                }
+            }
 
             // Table area
             Box(
@@ -120,11 +128,10 @@ private fun HandOverBar(message: String, onNewHand: () -> Unit, modifier: Modifi
 
 /** Green felt poker table with 6 player positions distributed around it. */
 @Composable
-private fun PokerTable(state: GameState, humanName: String, modifier: Modifier = Modifier) {
+private fun PokerTable(state: com.leejl.poker.engine.GameState, humanName: String, modifier: Modifier = Modifier) {
     val tableColor = Color(0xFF1B6B2E)
     val tableAccent = Color(0xFF0D4F1A)
 
-    // 6 player positions as (horizontal_frac, vertical_frac) of the container
     val playerSlots = listOf(
         0.50f to 0.92f,  // 0 — Bottom center (human)
         0.85f to 0.68f,  // 1 — Bottom right
@@ -140,7 +147,6 @@ private fun PokerTable(state: GameState, humanName: String, modifier: Modifier =
         val panelW = 140.dp
         val panelH = 85.dp
 
-        // Green felt background
         Canvas(Modifier.fillMaxSize().padding(4.dp)) {
             val cw = size.width
             val ch = size.height
@@ -149,7 +155,6 @@ private fun PokerTable(state: GameState, humanName: String, modifier: Modifier =
             drawRoundRect(tableAccent, Offset(cw * 0.03f, ch * 0.04f), Size(cw * 0.94f, ch * 0.92f), r)
         }
 
-        // Player panels
         val outcome = state.outcome
         val winners = outcome?.winnerNames?.toSet() ?: emptySet()
         val handNames = outcome?.handNames ?: emptyMap()
@@ -172,7 +177,6 @@ private fun PokerTable(state: GameState, humanName: String, modifier: Modifier =
             }
         }
 
-        // Center: community cards + pot
         Box(
             modifier = Modifier
                 .offset(x = w * 0.5f - 100.dp, y = h * 0.42f)
@@ -193,7 +197,6 @@ private fun PokerTable(state: GameState, humanName: String, modifier: Modifier =
         }
     }
 
-    // Hand history overlay (right edge)
     if (state.handHistory.isNotEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.CenterEnd)
