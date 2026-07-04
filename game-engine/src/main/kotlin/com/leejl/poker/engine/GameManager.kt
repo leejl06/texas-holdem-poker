@@ -370,8 +370,12 @@ class GameManager(
 
         // First to act after flop is first active player after dealer
         _currentPlayerIndex = advanceIndex(_dealerIndex, 1)
-        // Skip folded/all-in players
-        advanceToNextPlayer()
+        // Skip folded/all-in players (check current first, do-while skips it)
+        var skipCount = 0
+        while (!_players[_currentPlayerIndex].isActive && skipCount < _players.size) {
+            _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.size
+            skipCount++
+        }
     }
 
     private fun checkHandOver() {
