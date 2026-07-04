@@ -6,7 +6,6 @@ import com.leejl.poker.engine.GameManager
 
 /**
  * ViewModel for the poker game.
- * Logs all actions + errors to stdout/stderr for real-time debugging.
  */
 class GameViewModel(
     playerNames: List<String> = listOf(
@@ -48,7 +47,7 @@ class GameViewModel(
         safeRun("newHand") {
             state = manager.startNewHand()
             lastAction = "New hand dealt"
-            log("New hand — phase=${state.phase} pot=${state.pot}")
+            log("New hand")
             runAiActions()
         }
     }
@@ -56,9 +55,9 @@ class GameViewModel(
     fun act(action: PlayerAction) {
         lastError = null
         safeRun("act") {
-            require(action.playerName == humanName) { "Can only act for human player: ${action.playerName}" }
+            require(action.playerName == humanName) { "Can only act: ${action.playerName}" }
             if (state.isHandOver) return@safeRun
-            log("Player action: ${formatAction(action)}")
+            log("Player: ${formatAction(action)}")
             state = manager.applyAction(action)
             lastAction = formatAction(action)
             if (!state.isHandOver) runAiActions()
@@ -71,27 +70,36 @@ class GameViewModel(
         emptyList()
     }
 
+    /** Keep processing AI actions until it's the human's turn or the hand is over. */
     private fun runAiActions() {
-        val aiStates = manager.runAiActions(aiNames)
-        aiStates.forEach { state = it }
-        if (aiStates.isNotEmpty()) {
-            lastAction = state.lastAction
+        var retries = 0
+        while (retries < 50) {
+            val aiStates = manager.runAiActions(aiNames)
+            aiStates.forEach { state = it }
+            if (aiStates.isNotEmpty()) lastAction = state.lastAction
+            if (state.isHandOver) {
+                lastAction = state.outcome?.let { o -> o.winnerNames.joinToString(", ") + " won!" } ?: "Hand over"
+                log("Hand over: $lastAction")
+                break
+            }
+            val cur = state.currentPlayer
+            if (cur == null || cur.name == humanName) break
+            // Still an AI player's turn — loop around and process more
+            retries++
         }
-        if (state.isHandOver) {
-            lastAction = state.outcome?.let { o -> o.winnerNames.joinToString(", ") + " won!" } ?: "Hand over"
+        if (retries >= 50) {
+            System.err.println("[Poker] WARNING: runAiActions hit retry limit (50)")
+            lastError = "AI loop retry limit hit — please click New Hand"
         }
-        log("AI done — phase=${state.phase} turn=${state.currentPlayer?.name}")
     }
 
     private fun log(msg: String) {
-        System.out.println("[Poker] $msg  |  cards=${state.communityCards.size} pot=${state.pot} bet=${state.currentBet}")
+        val p = state.currentPlayer
+        System.out.println("[Poker] $msg  |  phase=${state.phase} pot=${state.pot} turn=${p?.name}")
     }
 
-    /** Run a block; on exception set [lastError] and print stack trace, but do NOT crash. */
     private inline fun safeRun(context: String, block: () -> Unit) {
-        try {
-            block()
-        } catch (e: Exception) {
+        try { block() } catch (e: Exception) {
             System.err.println("[Poker] ERROR in $context: ${e.message}")
             e.printStackTrace(System.err)
             lastError = "$context: ${e.message}"

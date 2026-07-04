@@ -381,6 +381,11 @@ class GameManager(
             _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.size
             skipCount++
         }
+
+        // If all players are all-in, auto-advance to the next phase
+        if (!_players[_currentPlayerIndex].isActive && isBettingRoundComplete()) {
+            advancePhase()
+        }
     }
 
     private fun checkHandOver() {
