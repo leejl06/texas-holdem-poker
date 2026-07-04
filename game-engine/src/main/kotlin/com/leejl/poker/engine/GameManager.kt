@@ -62,7 +62,9 @@ class GameManager(
 ) {
     private val rng = kotlin.random.Random
     private val deck = Deck(rng)
-    private var _players: MutableList<Player> = playerNames.map { Player(name = it, chips = startingChips) }.toMutableList()
+    private val _initialPlayerNames: List<String> = playerNames
+    private val _startingChips: Int = startingChips
+    private var _players: MutableList<Player> = _initialPlayerNames.map { Player(name = it, chips = _startingChips) }.toMutableList()
     private var _communityCards = mutableListOf<Card>()
     private var _pot = 0
     private var _sidePots = listOf<SidePot>()
@@ -116,7 +118,10 @@ class GameManager(
 
         // Remove eliminated players
         _players = _players.filter { !it.isEliminated }.toMutableList()
-        if (_players.size < 2) return state()
+        if (_players.size < 2) {
+        _players = _initialPlayerNames.map { Player(name = it, chips = _startingChips) }.toMutableList()
+        log("--- New Game! All players reset ---")
+    }
 
         // Advance dealer
         _dealerIndex = advanceIndex(_dealerIndex, 1)
