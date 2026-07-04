@@ -1,9 +1,9 @@
 package com.leejl.poker.model
 
 import androidx.compose.runtime.*
+import com.leejl.poker.ai.AiStrategy
 import com.leejl.poker.engine.GameManager
 import com.leejl.poker.engine.GameState
-import kotlinx.coroutines.*
 
 /**
  * ViewModel for the poker game.
@@ -23,18 +23,14 @@ class GameViewModel(
     var state by mutableStateOf(manager.startNewHand())
         private set
 
-    /** Trigger to scroll the hand history. */
     var lastAction by mutableStateOf("")
         private set
 
-    /** Whether we're waiting for the player to act. */
     val isPlayerTurn: Boolean
         get() = state.currentPlayer?.name == humanName && !state.isHandOver
 
-    /** Whether the current hand is over. */
     val isHandOver: Boolean get() = state.isHandOver
 
-    /** Total players still in the game (not eliminated). */
     val activePlayerCount: Int get() = state.players.count { !it.isEliminated }
 
     fun newHand() {
@@ -53,6 +49,7 @@ class GameViewModel(
 
     fun availableActions() = manager.availableActions()
 
+    /** Run AI actions synchronously (fast — typically < 10 iterations per round). */
     private fun runAiActions() {
         val aiStates = manager.runAiActions(aiNames)
         aiStates.forEach { state = it }
@@ -61,7 +58,7 @@ class GameViewModel(
         }
         if (state.isHandOver) {
             lastAction = state.outcome?.let { outcome ->
-                outcome.winnerNames.joinToString(", ") + " won hand!"
+                outcome.winnerNames.joinToString(", ") + " won!"
             } ?: "Hand over"
         }
     }

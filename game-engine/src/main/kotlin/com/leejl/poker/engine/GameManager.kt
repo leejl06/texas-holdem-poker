@@ -265,7 +265,8 @@ class GameManager(
     /** Run AI actions for all remaining AI players (for the current hand). */
     fun runAiActions(aiNames: Set<String>): List<GameState> {
         val states = mutableListOf<GameState>()
-        while (_winner == null) {
+        var aiStep = 0
+        while (_winner == null && aiStep < 200) {
             val player = _players.getOrNull(_currentPlayerIndex) ?: break
             if (!player.isActive) { advanceToNextPlayer(); continue }
             if (player.name !in aiNames) break // human's turn
@@ -282,6 +283,7 @@ class GameManager(
                 actions = actions
             )
             states.add(applyAction(action))
+            aiStep++
         }
         return states
     }
