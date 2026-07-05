@@ -272,11 +272,21 @@ class GameManager(
         val states = mutableListOf<GameState>()
         var aiStep = 0
         while (_winner == null && aiStep < 200) {
-            val player = _players.getOrNull(_currentPlayerIndex) ?: break
+            val idx = _currentPlayerIndex
+            val player = _players.getOrNull(idx)
+            if (player == null) {
+                System.err.println("[Poker] AI-LOOP: null player at idx=$idx size=${_players.size}")
+                break
+            }
             if (!player.isActive) { advanceToNextPlayer(); continue }
             if (player.name !in aiNames) break // human's turn
 
             val actions = availableActions()
+            if (actions.isEmpty()) {
+                System.err.println("[Poker] AI-LOOP: no actions for ${player.name} phase=$_phase toCall=${_currentBet - player.currentBet}")
+                advanceToNextPlayer()
+                continue
+            }
             val action = AiStrategy.chooseAction(
                 holeCards = player.holeCards,
                 communityCards = _communityCards,
@@ -290,6 +300,8 @@ class GameManager(
             states.add(applyAction(action))
             aiStep++
         }
+        if (aiStep >= 200) System.err.println("[Poker] AI-LOOP: hit step limit 200")
+        if (_winner == null) System.err.println("[Poker] AI-LOOP: exited, winner=null idx=$_currentPlayerIndex phase=$_phase")
         return states
     }
 
